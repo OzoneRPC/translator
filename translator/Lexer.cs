@@ -63,15 +63,15 @@ namespace translator {
           while (true) {
             if(this.currentPos == this.arrayChar.Length) {
               this.endPos = this.currentPos;
-              if (this.isNumericString(word)) {
+              if (this.isNumericString(word) || this.isLabel(word)) {
                 break;
               } else {
                 throw new TException("Не удалось распознать " + word, this.startPos, this.endPos);
               }
             }
             if(this.currentSymbol() == ' ' || this.currentSymbol() == ',' || this.currentSymbol() == '\n') {
-              if (this.isNumericString(word)) {
-                this.endPos = this.currentPos - 1;
+              if (this.isNumericString(word) || this.isLabel(word)) {
+                this.endPos = this.currentPos;
                 break;
               } else {
                 throw new TException("Не удалось распознать " + word, this.startPos, this.endPos);
@@ -105,7 +105,10 @@ namespace translator {
       Regex regex = new Regex("^\\d{1,}(.\\d{1,})?$");
       return regex.IsMatch(str);
     }
-
+    private bool isLabel(string str) {
+      Regex regex = new Regex("^[0-9]*\\:$");
+      return regex.IsMatch(str);
+    }
     private bool isVar(string str) {
       Regex regex = new Regex("^[a-zA-Zа-яА-Я]{1,}([0-9]*|[a-zA-Zа-яА-Я]*)*$");
       return regex.IsMatch(str);

@@ -15,14 +15,16 @@ namespace translator {
     private Lexer lexer;
     private ArrayList integerNums = new ArrayList();
     private ArrayList doubleNums = new ArrayList();
+    private ArrayList zvenoNums = new ArrayList();
     private AssocArray varsArray = new AssocArray();
+
 
     public Parser(string text) {
       this.lexer = new Lexer(text);
     }
     public void language() {
       this.lexer.nextWord();
-      if(lexer.currentWord != "Начало") {
+      if (lexer.currentWord != "Начало") {
         this.makeException("Ожидалось \"Начало\"");
       } else {
         this.lexer.nextWord();
@@ -33,7 +35,12 @@ namespace translator {
         } else {
           this.makeException("Ожидалось либо \"Первое\", либо \"Второе\", либо \"Третье\"");
         }
-        this.zveno();
+        if (this.lexer.currentWord == "Сочетаемое") {
+          this.zveno();
+        } else {
+          this.makeException("Ожидалось \"Сочетаемое\"");
+        }
+        
         this.oper();
       }
     }
@@ -87,7 +94,19 @@ namespace translator {
 
     }
     private void zveno() {
-      this.printArrays();
+      this.lexer.nextWord();
+      while (true) {
+        if (this.isInt(this.lexer.currentWord)) {
+          this.zvenoNums.Add(this.strToInt(this.lexer.currentWord));
+          this.lexer.nextWord();
+          if (this.isLabel(this.lexer.currentWord) || this.isVar(this.lexer.currentWord)) {
+            break;
+          }
+        } else {
+          this.makeException("Ожидалось целое число");
+        }
+      }
+
     }
     private void oper() { }
 
@@ -106,6 +125,20 @@ namespace translator {
       Regex regex = new Regex("^[a-zA-Zа-яА-Я]{1,}([0-9]*|[a-zA-Zа-яА-Я]*)*$");
       return regex.IsMatch(str);
     }
+    private bool isLabel(string str) {
+      Regex regex = new Regex("^[0-9]*\\:$");
+      return regex.IsMatch(str);
+    }
+    private bool isInt(string str) {
+      if(str != "") {
+        Regex regex = new Regex("^[0-9]*$");
+        return regex.IsMatch(str);
+      } else {
+        return false;
+      }
+      
+    }
+
 
     private void printArrays() {
       Console.WriteLine("Int:");
