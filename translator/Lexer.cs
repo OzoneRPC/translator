@@ -5,7 +5,6 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 using System.Collections;
-using System.Windows.Forms;
 
 
 
@@ -15,7 +14,7 @@ namespace translator {
     private char[] arrayChar;
     private int currentPos = 0;
 
-    private string[] terms = { "Начало", "Первое", "Второе", "Конец", "Второго", "Третье", "Сочетаемое" };
+    private string[] terms = { "Начало", "Первое", "Второе", "Конец", "второго", "Третье", "Сочетаемое" };
 
     public int startPos = 0;
     public int endPos = 0;
@@ -33,13 +32,12 @@ namespace translator {
         if(this.currentSymbol() == ' ' || this.currentSymbol() == '\n') {
           this.skipWhitespaces();
         }
-        this.startPos = this.currentPos;
-        //Текущий символ - буква
-        if (this.isLiteral(this.currentSymbol())) {
+        this.startPos = this.currentPos;     
+        if (this.isLiteral(this.currentSymbol())) { //Текущий символ - буква
           while (true) {
             if(this.currentPos == this.arrayChar.Length) {
               this.endPos = this.currentPos;
-              if (Array.IndexOf(this.terms, word) != -1) {
+              if (Array.IndexOf(this.terms, word) != -1 || this.isVar(word)) {
                 break;
               } else {               
                 throw new TException("Не удалось распознать " + word, this.startPos, this.endPos);
@@ -47,7 +45,7 @@ namespace translator {
             }       
             if (this.currentSymbol() == ' ' || this.currentSymbol() == ',' ||this.currentSymbol() == '\n') {
               this.endPos = this.currentPos;          
-              if (Array.IndexOf(this.terms, word) != -1) {
+              if (Array.IndexOf(this.terms, word) != -1 || this.isVar(word)) {
                 break;
               } else {              
                 throw new TException("Не удалось распознать " + word, this.startPos, this.endPos);
@@ -60,8 +58,9 @@ namespace translator {
           this.endPos = this.currentPos;
           word += this.currentSymbol();
           this.currentPos++;
-        }else if (this.isNumericChar(this.currentSymbol())) {
-          while(true) {
+
+        } else if (this.isNumericChar(this.currentSymbol())) {//Текущий символ - число
+          while (true) {
             if(this.currentPos == this.arrayChar.Length) {
               this.endPos = this.currentPos;
               if (this.isNumericString(word)) {
@@ -106,6 +105,12 @@ namespace translator {
       Regex regex = new Regex("^\\d{1,}(.\\d{1,})?$");
       return regex.IsMatch(str);
     }
+
+    private bool isVar(string str) {
+      Regex regex = new Regex("^[a-zA-Zа-яА-Я]{1,}([0-9]*|[a-zA-Zа-яА-Я]*)*$");
+      return regex.IsMatch(str);
+    }
+
     private void skipWhitespaces() {
       if(this.currentPos < this.arrayChar.Length) {
         if(this.currentSymbol() == ' ' || this.currentSymbol() == '\n') {
@@ -119,5 +124,7 @@ namespace translator {
         }
       }
     }
+   
+    
   }
 }

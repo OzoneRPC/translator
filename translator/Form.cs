@@ -18,15 +18,16 @@ namespace translator {
     }
 
     private void button1_Click(object sender, EventArgs e) {
-      this.textbox.Text = "Начало\nПервое 1 2 3\nВторое 1.2, 1.3 Конец второго";
+      this.textbox.Text = "Начало\nПервое 1 2 3\nВторое 1.2, 1.3 Конец второго\nТретье пер1, пер2,     ";
       this.parser = new Parser(this.textbox.Text);
       try {
         this.parser.language();
       }
       catch (TException exc) {
-        this.printMessage("Exception: " + exc.Message);
+        this.printMessage("Exception: " + exc.Message + " " + exc.startPositon + " " + exc.endPosition);
+        
         this.textbox.Focus();
-        this.textbox.SelectionStart = exc.startPositon;
+        this.textbox.SelectionStart = exc.endPosition;
         this.textbox.SelectionLength = exc.endPosition - exc.startPositon;
       }
       
