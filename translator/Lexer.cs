@@ -24,8 +24,8 @@ namespace translator {
 
     public Lexer(string text) {
       //Получаем текст и преобразовываем его в символьный массив
-      this.inputText = text.Trim(' ');
-      this.arrayChar = this.inputText.ToCharArray();
+      //this.inputText = text.Trim(' ');
+      this.arrayChar = text.ToCharArray();
     }
     public void nextWord() {
       this.word = "";
@@ -56,7 +56,7 @@ namespace translator {
       while (true) {
         if (this.currentPos == this.arrayChar.Length) {
           this.endPos = this.currentPos;
-          if (Array.IndexOf(this.terms, this.word) != -1 || this.isVar(this.word)) {
+          if (Array.IndexOf(this.terms, this.word) != -1 || this.isVar(this.word) || this.isLogicalOperator(this.word)) {
             break;
           } else {
             throw new TException("Не удалось распознать " + this.word, this.startPos, this.endPos);
@@ -64,18 +64,23 @@ namespace translator {
         }
         if (this.currentSymbol() == ' ' || this.currentSymbol() == ',' || this.currentSymbol() == '\n') {
           this.endPos = this.currentPos;
-          if (Array.IndexOf(this.terms, this.word) != -1 || this.isVar(this.word)) {
+          if (Array.IndexOf(this.terms, this.word) != -1 || this.isVar(this.word) || this.isLogicalOperator(this.word)) {
             break;
           } else {
             throw new TException("Не удалось распознать " + this.word, this.startPos, this.endPos);
           }
         }
         this.word += this.currentSymbol();
+        if (this.isLogicalOperator(this.word)) {//Может быть неправильно
+          this.endPos = this.currentPos;
+          this.currentPos++;
+          break;
+        }
         this.currentPos++;
       }
     }
     private void processOperator() {
-      this.endPos = this.currentPos;
+      this.endPos = this.currentPos+1;
       this.word += this.currentSymbol();
       this.currentPos++;
     }
@@ -89,7 +94,10 @@ namespace translator {
             throw new TException("Не удалось распознать " + this.word, this.startPos, this.endPos);
           }
         }
-        if (this.currentSymbol() == ' ' || this.currentSymbol() == ',' || this.currentSymbol() == '\n' || this.currentSymbol() == ':') {
+        if (  this.currentSymbol() == ' '  ||               
+              this.currentSymbol() == '\n' || 
+              this.isOperator(this.currentSymbol())
+           ) {
           if (this.isNumericString(this.word)) {
             this.endPos = this.currentPos;
             break;
@@ -119,9 +127,15 @@ namespace translator {
       Regex regex = new Regex("^\\d{1,}(.\\d{1,})?$");
       return regex.IsMatch(str);
     }
+    private bool isLogicalOperator(string str) {
+      return (str == "or" || str == "and" || str == "not");
+    }
     private bool isVar(string str) {
       Regex regex = new Regex("^[a-zA-Zа-яА-Я]{1,}([0-9]*|[a-zA-Zа-яА-Я]*)*$");
       return regex.IsMatch(str);
+    }
+    private bool isBrace(char symbol) {
+      return (symbol == '[' || symbol == ']');
     }
     private void skipWhitespaces() {
       if(this.currentSymbol() == ' ' || this.currentSymbol() == '\n') {
@@ -138,6 +152,7 @@ namespace translator {
           }              
         }
       }
+      this.startPos = this.currentPos;
     } 
   }
 }

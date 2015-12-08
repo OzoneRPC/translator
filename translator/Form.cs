@@ -15,7 +15,7 @@ namespace translator {
 
     public Translator() {
       InitializeComponent();
-      this.textbox.Text = "Начало\nПервое 1 2 3\nВторое 1.2, 1.3 Конец второго\nТретье пер1, пер2, per\nСочетаемое 5 4 3\nпер1 = 1 + 1";
+      this.textbox.Text = "Начало\nПервое 1 2 3\nВторое 1.2, 1.3 Конец второго\nТретье пер1, пер2, per\nСочетаемое 5 4 3\nпер1 = [[[[1+1]]]]]";
     }
 
     private void button1_Click(object sender, EventArgs e) {
@@ -23,7 +23,7 @@ namespace translator {
       this.parser = new Parser(this.textbox.Text);
       try {
         this.parser.language();
-        this.printMessage(this.parser.getResult());
+        this.printMessage(this.parser.result);
       }
       catch (TException exc) {
         this.printMessage("Exception: " + exc.Message);        

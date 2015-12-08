@@ -18,7 +18,10 @@ namespace translator {
     private ArrayList zvenoNums = new ArrayList();
     private AssocArray varsArray = new AssocArray();
     private const int DEFAULT_VAR_VAlUE = 0;
+    private const int NASTING_OF_BRACES = 3;
+    private int countOfNasting = 0;
 
+    public string result = "";
     public Parser(string text) {
       this.lexer = new Lexer(text);
     }
@@ -42,7 +45,6 @@ namespace translator {
           this.makeException("Ожидалось \"Сочетаемое\"");
         }      
         this.oper();
-        this.printArrays();
       }
     }
 
@@ -125,18 +127,28 @@ namespace translator {
       if (this.lexer.currentWord == "=") {
         this.lexer.nextWord();
         this.varsArray[currentVar] = this.rightPart();
+        this.result = currentVar + " = " + this.varsArray[currentVar];
       } else {
         this.makeException("Ожидалось \"=\"");
       }
     }
     private int rightPart() {
       int result = 0;
-      if(this.isInt(this.lexer.currentWord) || this.inVarsArray(this.lexer.currentWord) || this.isAdditiveOperator(this.lexer.currentWord)) {
+      if( this.isInt(this.lexer.currentWord)              || 
+          this.inVarsArray(this.lexer.currentWord)        || 
+          this.isAdditiveOperator(this.lexer.currentWord) ||
+          this.isBrace(this.lexer.currentWord)            ||
+          this.lexer.currentWord == "not" ) {
+   
         if(this.lexer.currentWord == "-") {
           this.lexer.nextWord();
           result = 0 - this.multiplicativeBlock();
-        } else if (this.isInt(this.lexer.currentWord)) {
+        }else if (this.isBrace(this.lexer.currentWord)) {
+          result = this.typeBlock();
+        }else if (this.isInt(this.lexer.currentWord)) {
           result = this.multiplicativeBlock();
+        }else if (this.lexer.currentWord == "not") {
+          result = this.logicalNotBlock();
         }
         //this.lexer.nextWord();
         while (true) {
@@ -201,12 +213,27 @@ namespace translator {
       return result;
     }
     private int typeBlock() {
+      int result = 0;
       if (this.inVarsArray(this.lexer.currentWord)) {
         return this.varsArray[this.lexer.currentWord];
       } else if(this.isInt(this.lexer.currentWord)){
-        int result = this.strToInt(this.lexer.currentWord);
+        result = this.strToInt(this.lexer.currentWord);
         this.lexer.nextWord();
         return result;
+      } else if(this.lexer.currentWord == "[") {
+        this.countOfNasting = this.countOfNasting + 1;
+        if(this.countOfNasting < NASTING_OF_BRACES) {
+          this.lexer.nextWord();
+          result = this.rightPart();
+          if(this.lexer.currentWord == "]") {
+            this.countOfNasting = this.countOfNasting - 1;
+          }
+          this.lexer.nextWord();
+          return result;
+        } else {
+          this.lexer.nextWord();
+          this.makeException("Вложеность скобок должна быть не больше 3");
+        }
       }
       return 0;
     }
@@ -246,34 +273,8 @@ namespace translator {
     private bool isAdditiveOperator(string str) {
       return (str == "+" || str == "-");
     }
-
-
-    private void printArrays() {
-      Console.WriteLine("Int:");
-      foreach(int elem in this.integerNums) {
-        Console.WriteLine(elem);
-      }
-      Console.WriteLine("Double:");
-      foreach (double elem in this.doubleNums) {
-        Console.WriteLine(elem);
-      }
-      Console.WriteLine("Vars:");
-      foreach(AssocElem elem in this.varsArray) {
-        if(elem.Value !=  0) {
-          Console.WriteLine(elem.Key.ToString() + " " + elem.Value);
-        }      
-      }
-      
-    }
-
-    public string getResult() {
-      string result = "";
-      foreach (AssocElem elem in this.varsArray) {
-        if (elem.Value != 0) {
-          result += elem.Key.ToString() + " = " + elem.Value + "\n";
-        }
-      }
-      return result;
+    private bool isBrace(string str) {
+      return (str == "[" || str == "]");
     }
   }
 }
