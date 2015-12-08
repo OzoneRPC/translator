@@ -134,7 +134,7 @@ namespace translator {
       if(this.isInt(this.lexer.currentWord) || this.inVarsArray(this.lexer.currentWord) || this.isAdditiveOperator(this.lexer.currentWord)) {
         if(this.lexer.currentWord == "-") {
           this.lexer.nextWord();
-          result = 0 - this.typeBlock();
+          result = 0 - this.multiplicativeBlock();
         } else if (this.isInt(this.lexer.currentWord)) {
           result = this.multiplicativeBlock();
         }
