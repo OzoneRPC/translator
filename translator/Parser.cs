@@ -131,19 +131,18 @@ namespace translator {
     }
     private int rightPart() {
       int result = 0;
-
-      if(this.isInt(this.lexer.currentWord) || this.inVarsArray(this.lexer.currentWord)) {
-        if (this.isInt(this.lexer.currentWord)) {
+      if(this.isInt(this.lexer.currentWord) || this.inVarsArray(this.lexer.currentWord) || this.isAdditiveOperator(this.lexer.currentWord)) {
+        if(this.lexer.currentWord == "-") {
+          this.lexer.nextWord();
+          result = 0 - this.typeBlock();
+        } else if (this.isInt(this.lexer.currentWord)) {
           result = this.multiplicativeBlock();
         }
-
-
-        this.lexer.nextWord();
+        //this.lexer.nextWord();
         while (true) {
-          if(this.lexer.currentWord != "+" || this.lexer.currentWord != "-") {
+          if(this.lexer.currentWord != "+" && this.lexer.currentWord != "-") {
             break;
-          }
-          if(this.lexer.currentWord == "+") {
+          }else if(this.lexer.currentWord == "+") {
             this.lexer.nextWord();
             result = result + this.multiplicativeBlock();
           }else if(this.lexer.currentWord == "-") {
@@ -157,9 +156,9 @@ namespace translator {
     private int multiplicativeBlock() {
       int result = 0;
       result = this.logicalBlock();
-      this.lexer.nextWord();//Переходим от числа к оператору
+      //this.lexer.nextWord();//Переходим от числа к оператору
       while (true) {
-        if (this.lexer.currentWord != "/" || this.lexer.currentWord != "*") {
+        if (this.lexer.currentWord != "/" && this.lexer.currentWord != "*") {
           break;
         }
         if (this.lexer.currentWord == "*") {
@@ -175,9 +174,9 @@ namespace translator {
     private int logicalBlock() {
       int result = 0;
       result = this.logicalNotBlock();
-      this.lexer.nextWord();
+      //this.lexer.nextWord();
       while (true) {
-        if(this.lexer.currentWord != "or" || this.lexer.currentWord != "and") {
+        if(this.lexer.currentWord != "or" && this.lexer.currentWord != "and") {
           break;
         }else if(this.lexer.currentWord == "or") {
           this.lexer.nextWord();
@@ -205,8 +204,9 @@ namespace translator {
       if (this.inVarsArray(this.lexer.currentWord)) {
         return this.varsArray[this.lexer.currentWord];
       } else if(this.isInt(this.lexer.currentWord)){
-        MessageBox.Show("111");
-        return this.strToInt(this.lexer.currentWord);
+        int result = this.strToInt(this.lexer.currentWord);
+        this.lexer.nextWord();
+        return result;
       }
       return 0;
     }
@@ -243,6 +243,9 @@ namespace translator {
       Regex regex = new Regex("^[0-9]+.[0-9]+$");
       return regex.IsMatch(str);
     }
+    private bool isAdditiveOperator(string str) {
+      return (str == "+" || str == "-");
+    }
 
 
     private void printArrays() {
@@ -261,6 +264,16 @@ namespace translator {
         }      
       }
       
+    }
+
+    public string getResult() {
+      string result = "";
+      foreach (AssocElem elem in this.varsArray) {
+        if (elem.Value != 0) {
+          result += elem.Key.ToString() + " = " + elem.Value + "\n";
+        }
+      }
+      return result;
     }
   }
 }
