@@ -43,6 +43,8 @@ namespace translator {
             this.processNumber();
           }
         }
+      } else {
+        this.endPos = this.currentPos;
       }
       this.currentWord = this.word;   
     }
@@ -50,7 +52,6 @@ namespace translator {
     private char currentSymbol() {
       return this.arrayChar[this.currentPos];
     }
-    
 
     private void processLiteral() {
       while (true) {
@@ -94,10 +95,7 @@ namespace translator {
             throw new TException("Не удалось распознать " + this.word, this.startPos, this.endPos);
           }
         }
-        if (  this.currentSymbol() == ' '  ||               
-              this.currentSymbol() == '\n' || 
-              this.isOperator(this.currentSymbol())
-           ) {
+        if ( this.isWhiteSpace(this.currentSymbol()) || this.isLiteral(this.currentSymbol()) || this.isOperator(this.currentSymbol()) ) {
           if (this.isNumericString(this.word)) {
             this.endPos = this.currentPos;
             break;
@@ -111,6 +109,9 @@ namespace translator {
       }
     }
 
+    private bool isWhiteSpace(char symbol) {
+      return (symbol == ' ' || symbol == '\n');
+    }
     private bool isLiteral(char symbol) {
       Regex regex = new Regex("[a-zA-Zа-яА-Я]");
       return regex.IsMatch(symbol.ToString());

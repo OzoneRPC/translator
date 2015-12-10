@@ -15,7 +15,7 @@ namespace translator {
 
     public Translator() {
       InitializeComponent();
-      this.textbox.Text = "Начало\nПервое 1 2 3\nВторое 1.2, 1.3 Конец второго\nТретье пер1, пер2, per\nСочетаемое 5 4 3\nпер1 = [[[[1+1]]]]]";
+      this.textbox.Text = "Начало\nПервое 1 2 3\nВторое 1.2, 1.3 Конец второго\nТретье пер1, пер2, per\nСочетаемое 5 4 3\nпер1 = 1and";
     }
 
     private void button1_Click(object sender, EventArgs e) {

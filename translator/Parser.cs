@@ -143,6 +143,9 @@ namespace translator {
         if(this.lexer.currentWord == "-") {
           this.lexer.nextWord();
           result = 0 - this.multiplicativeBlock();
+        }else if(this.lexer.currentWord == "+") {
+          this.lexer.nextWord();
+          result = this.multiplicativeBlock();
         }else if (this.isBrace(this.lexer.currentWord)) {
           result = this.typeBlock();
         }else if (this.isInt(this.lexer.currentWord)) {
@@ -156,10 +159,19 @@ namespace translator {
             break;
           }else if(this.lexer.currentWord == "+") {
             this.lexer.nextWord();
-            result = result + this.multiplicativeBlock();
+            if (this.isInt(this.lexer.currentWord) || isBrace(this.lexer.currentWord)) {
+              result = result + this.multiplicativeBlock();
+            } else {
+              this.makeException("Ожидалось число");
+            }
+            
           }else if(this.lexer.currentWord == "-") {
             this.lexer.nextWord();
-            result = result - this.multiplicativeBlock();
+            if (this.isInt(this.lexer.currentWord) || isBrace(this.lexer.currentWord)) {
+              result = result - this.multiplicativeBlock();
+            } else {
+              this.makeException("Ожидалось число");
+            }
           }
         }
       }
@@ -192,10 +204,18 @@ namespace translator {
           break;
         }else if(this.lexer.currentWord == "or") {
           this.lexer.nextWord();
-          result = this.boolToInt(this.intToBool(result) || this.intToBool(this.logicalNotBlock()));
-        }else if((this.lexer.currentWord == "and")){
+          if (this.isInt(this.lexer.currentWord) || isBrace(this.lexer.currentWord)) {
+            result = this.boolToInt(this.intToBool(result) || this.intToBool(this.logicalNotBlock()));
+          } else {
+            this.makeException("Ожидалось число");
+          }
+        } else if((this.lexer.currentWord == "and")){
           this.lexer.nextWord();
-          result = this.boolToInt(this.intToBool(result) && this.intToBool(this.logicalNotBlock()));
+          if (this.isInt(this.lexer.currentWord) || isBrace(this.lexer.currentWord)) {
+            result = this.boolToInt(this.intToBool(result) && this.intToBool(this.logicalNotBlock()));
+          } else {
+            this.makeException("Ожидалось число");
+          }
         }
       }
       return result;
@@ -221,12 +241,18 @@ namespace translator {
         this.lexer.nextWord();
         return result;
       } else if(this.lexer.currentWord == "[") {
+        int braceStartPos = this.lexer.startPos + 1;
         this.countOfNasting = this.countOfNasting + 1;
         if(this.countOfNasting < NASTING_OF_BRACES) {
           this.lexer.nextWord();
+          if(this.lexer.currentWord == "]") {
+            this.makeException("Ожидалась правая часть", braceStartPos, this.lexer.endPos-1);
+          }
           result = this.rightPart();
           if(this.lexer.currentWord == "]") {
             this.countOfNasting = this.countOfNasting - 1;
+          } else {
+            this.makeException("Ожидалась скобка");
           }
           this.lexer.nextWord();
           return result;
@@ -237,8 +263,13 @@ namespace translator {
       }
       return 0;
     }
-    private void makeException(string message) {
-      throw new TException(message, this.lexer.startPos, this.lexer.endPos);
+    private void makeException(string message, int startPos = 0, int endPos = 0) {
+      if(startPos == 0 && endPos == 0) {
+        throw new TException(message, this.lexer.startPos, this.lexer.endPos);
+      } else {
+        throw new TException(message, startPos, endPos);
+      }
+
     }
 
     private int strToInt(string str) {      
