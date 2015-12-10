@@ -147,7 +147,7 @@ namespace translator {
           this.lexer.nextWord();
           result = this.multiplicativeBlock();
         }else if (this.isBrace(this.lexer.currentWord)) {
-          result = this.typeBlock();
+          result = this.multiplicativeBlock();
         }else if (this.isInt(this.lexer.currentWord)) {
           result = this.multiplicativeBlock();
         }else if (this.lexer.currentWord == "not") {
@@ -187,10 +187,18 @@ namespace translator {
         }
         if (this.lexer.currentWord == "*") {
           this.lexer.nextWord();
-          result = result * this.logicalBlock();
+          if (this.isInt(this.lexer.currentWord) || isBrace(this.lexer.currentWord)) {
+            result = result * this.logicalBlock();
+          } else {
+            this.makeException("Ожидалось число");
+          }
         }else if(this.lexer.currentWord == "/") {
           this.lexer.nextWord();
-          result = result / this.logicalBlock();
+          if (this.isInt(this.lexer.currentWord) || isBrace(this.lexer.currentWord)) {
+            result = result / this.logicalBlock();
+          } else {
+            this.makeException("Ожидалось число");
+          }
         }
       }
       return result;
