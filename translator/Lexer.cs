@@ -42,6 +42,8 @@ namespace translator {
           } else if (this.isNumericChar(this.currentSymbol())) {//Текущий символ - число
             this.processNumber();
           }
+        } else {
+          this.endPos = this.currentPos;
         }
       } else {
         this.endPos = this.currentPos;
@@ -57,7 +59,7 @@ namespace translator {
       while (true) {
         if (this.currentPos == this.arrayChar.Length) {
           this.endPos = this.currentPos;
-          if (Array.IndexOf(this.terms, this.word) != -1 || this.isVar(this.word) || this.isLogicalOperator(this.word)) {
+          if (this.isTerminal(this.word) || this.isVar(this.word) || this.isLogicalOperator(this.word)) {
             break;
           } else {
             throw new TException("Не удалось распознать " + this.word, this.startPos, this.endPos);
@@ -65,7 +67,7 @@ namespace translator {
         }
         if (this.currentSymbol() == ' ' || this.currentSymbol() == ',' || this.currentSymbol() == '\n') {
           this.endPos = this.currentPos;
-          if (Array.IndexOf(this.terms, this.word) != -1 || this.isVar(this.word) || this.isLogicalOperator(this.word)) {
+          if (this.isTerminal(this.word) || this.isVar(this.word) || this.isLogicalOperator(this.word)) {
             break;
           } else {
             throw new TException("Не удалось распознать " + this.word, this.startPos, this.endPos);
@@ -109,6 +111,14 @@ namespace translator {
       }
     }
 
+    public bool isTerminal(string str) {
+      if (Array.IndexOf(this.terms, str) == -1) {
+        return false;
+      } else {
+        return true;
+      }
+    }
+
     private bool isWhiteSpace(char symbol) {
       return (symbol == ' ' || symbol == '\n');
     }
@@ -117,6 +127,11 @@ namespace translator {
       return regex.IsMatch(symbol.ToString());
     }
     private bool isOperator(char symbol) {
+      if (symbol == '(' || symbol == ')') {
+        throw new TException("Недопустимо использование круглых скобок", this.startPos, this.currentPos + 1);
+      } else if (symbol == '{' || symbol == '}') {
+        throw new TException("Недопустимо использование фигурных скобок", this.startPos, this.currentPos + 1);
+      }
       Regex regex = new Regex("\\,|\\+|\\-|\\*|\\/|\\[|\\]|\\:|=");
       return regex.IsMatch(symbol.ToString());
     }
@@ -155,5 +170,6 @@ namespace translator {
       }
       this.startPos = this.currentPos;
     } 
+
   }
 }

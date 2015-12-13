@@ -18,8 +18,8 @@ namespace translator {
     private ArrayList zvenoNums = new ArrayList();
     private AssocArray varsArray = new AssocArray();
     private const int DEFAULT_VAR_VAlUE = 0;
-    private const int NASTING_OF_BRACES = 3;
-    private int countOfNasting = 0;
+    private const int NESTING_OF_BRACES = 4;
+    private int countOfNesting = 0;
 
     public string result = "";
     public Parser(string text) {
@@ -51,54 +51,83 @@ namespace translator {
     private void multiplicity() {
       if (this.lexer.currentWord == "Первое") {
         this.lexer.nextWord();
+        int numberCounter = 0;//Нужна, чтобы проверять, есть ли после Первого число или нет.Чтобы не было такого - Первое Второе
         while (true) {
-          if (this.lexer.currentWord == "Второе" || this.lexer.currentWord == "Третье" || this.lexer.currentWord == "") {
-            break;
+          if (this.lexer.currentWord == "Сочетаемое" || this.lexer.currentWord == "Первое" || this.lexer.currentWord == "Второе" || this.lexer.currentWord == "Третье") {
+            if(numberCounter == 1) {
+              break;
+            } else {
+              this.makeException("Ожидалось целое число. Получено: \"" + this.lexer.currentWord + "\"");
+            }
+
           }
-          this.integerNums.Add(this.strToInt(this.lexer.currentWord));
-          this.lexer.nextWord();
+          if (this.isInt(this.lexer.currentWord)) {
+            this.integerNums.Add(this.strToInt(this.lexer.currentWord));
+            this.lexer.nextWord();
+            numberCounter = 1;
+          }else if(this.lexer.currentWord == "") {
+            this.makeException("Ожидалось целое число, либо \"Первое\", \"Второе\", \"Третье\".");
+          } else {
+            this.makeException("Доступны только целые числа. Получено: \"" + this.lexer.currentWord + "\"");
+          }
         }
       } else if (this.lexer.currentWord == "Второе") {
         this.lexer.nextWord();
+        int numberCounter = 0;
         while (true) {
           if (this.isDouble(this.lexer.currentWord)) {
-            this.doubleNums.Add(this.strToDouble(this.lexer.currentWord));
+            double currentValue = this.strToDouble(this.lexer.currentWord);
+            int startPos = this.lexer.endPos; //Нужна для выделения отсутствующей запятой между двумя числами.
             this.lexer.nextWord();
-            if(this.lexer.currentWord == ",") {
+            if (this.lexer.currentWord == ",") {
+              this.doubleNums.Add(currentValue);
               this.lexer.nextWord();
-            }else if(this.lexer.currentWord == "Конец") {
+              numberCounter = 1;
+            } else if (this.lexer.currentWord == "Конец") {
               this.lexer.nextWord();
-              if(this.lexer.currentWord != "второго") {
+              if (this.lexer.currentWord != "второго") {
                 this.makeException("Ожидалось \"Конец второго\". Получено: \"" + this.lexer.currentWord + "\"");
               } else {
                 this.lexer.nextWord();
                 break;
               }
+            } else if(this.isDouble(this.lexer.currentWord)) {
+              makeException("Пропущена запятая.", startPos, this.lexer.startPos);
             } else {
               this.makeException("Ожидалась запята, либо \"Конец второго\". Получено: \"" + this.lexer.currentWord + "\"");
-            } 
+            }
           } else {
-            this.makeException("Ожидалось дробное число. Получено: \"" + this.lexer.currentWord + "\"");
+            this.makeException("Доступны только вещественные числа. Получено: \"" + this.lexer.currentWord + "\"");
           }
         }
       } else if (this.lexer.currentWord == "Третье") {
         this.lexer.nextWord();
         while (true) {
           if (this.isVar(this.lexer.currentWord)) {
-            this.varsArray[this.lexer.currentWord] = DEFAULT_VAR_VAlUE;
+            string currentVar = this.lexer.currentWord;
+            int startPos = this.lexer.endPos; //Нужна для выделения отсутствующей запятой между двумя переменными.
             this.lexer.nextWord();
+
             if (this.lexer.currentWord == ",") {
+              this.varsArray[currentVar] = DEFAULT_VAR_VAlUE;
               this.lexer.nextWord();
-              continue;
-            } else {
+              if(this.isVar(this.lexer.currentWord)) {//Переменная ли за запятой?
+                continue;
+              } else {
+                makeException("Ожидалось переменная. Получено: \"" + this.lexer.currentWord + "\"");
+              }
+
+            } else if(this.isVar(this.lexer.currentWord)) {
+              makeException("Пропущена запятая.", startPos, this.lexer.startPos);
+            } else if(this.lexer.currentWord == "Сочетаемое" || this.lexer.currentWord == "Первое" || this.lexer.currentWord == "Второе" || this.lexer.currentWord == "Третье") {
+              this.varsArray[currentVar] = DEFAULT_VAR_VAlUE;
               break;
             }
           } else {
-            this.makeException("Ожидалась переменная");
+            makeException("Доступны только переменные. Получено: \"" + this.lexer.currentWord + "\"");
           }
         }
       }
-
     }
     private void zveno() {
       this.lexer.nextWord();
@@ -138,7 +167,7 @@ namespace translator {
           this.inVarsArray(this.lexer.currentWord)        || 
           this.isAdditiveOperator(this.lexer.currentWord) ||
           this.isBrace(this.lexer.currentWord)            ||
-          this.lexer.currentWord == "not" ) {
+          this.isLogicalNot(this.lexer.currentWord) ) {
    
         if(this.lexer.currentWord == "-") {
           this.lexer.nextWord();
@@ -150,55 +179,79 @@ namespace translator {
           result = this.multiplicativeBlock();
         }else if (this.isInt(this.lexer.currentWord)) {
           result = this.multiplicativeBlock();
-        }else if (this.lexer.currentWord == "not") {
+        }else if (this.isLogicalNot(this.lexer.currentWord)) {
           result = this.logicalNotBlock();
+        }else if (this.inVarsArray(this.lexer.currentWord)) {
+          result = this.multiplicativeBlock();
         }
         //this.lexer.nextWord();
         while (true) {
-          if(this.lexer.currentWord != "+" && this.lexer.currentWord != "-") {
+          if (this.isAdditiveOperator(this.lexer.currentWord)) {
+            string oper = this.lexer.currentWord;
+            this.lexer.nextWord();
+            if( this.isInt(this.lexer.currentWord)        || 
+                this.isBrace(this.lexer.currentWord)      || 
+                this.isLogicalNot(this.lexer.currentWord) || 
+                this.inVarsArray(this.lexer.currentWord)) {
+              if(this.lexer.currentWord == "]") {
+                this.makeException("Недопустимо использование знаков операции перед \"]\"");
+              } else {
+                switch (oper) {
+                  case "+":
+                    result = result + this.multiplicativeBlock();
+                    break;
+                  case "-":
+                    result = result - this.multiplicativeBlock();
+                    break;
+                }
+              }  
+            } else {
+              this.makeException("Ожидалось число, либо \"not\", либо переменная");
+            }
+          } else {
             break;
-          }else if(this.lexer.currentWord == "+") {
-            this.lexer.nextWord();
-            if (this.isInt(this.lexer.currentWord) || isBrace(this.lexer.currentWord)) {
-              result = result + this.multiplicativeBlock();
-            } else {
-              this.makeException("Ожидалось число");
-            }
-            
-          }else if(this.lexer.currentWord == "-") {
-            this.lexer.nextWord();
-            if (this.isInt(this.lexer.currentWord) || isBrace(this.lexer.currentWord)) {
-              result = result - this.multiplicativeBlock();
-            } else {
-              this.makeException("Ожидалось число");
-            }
           }
         }
+      } else {
+        this.makeException("Ожидалось либо число, либо переменная, либо \"[\", либо \"not\"");
       }
       return result;
     }
     private int multiplicativeBlock() {
       int result = 0;
       result = this.logicalBlock();
-      //this.lexer.nextWord();//Переходим от числа к оператору
       while (true) {
-        if (this.lexer.currentWord != "/" && this.lexer.currentWord != "*") {
+        if (this.isMultiplicativeOperator(this.lexer.currentWord)) {
+          string oper = this.lexer.currentWord; // Сохраняем оператор
+          this.lexer.nextWord();//Смещаемся на следующий токен и проверяем его
+          if( 
+            this.isInt(this.lexer.currentWord)        || 
+            this.isBrace(this.lexer.currentWord)      || 
+            this.isLogicalNot(this.lexer.currentWord) ||
+            this.inVarsArray(this.lexer.currentWord)) {
+            if (this.lexer.currentWord == "]") {
+              this.makeException("Недопустимо использование знаков операции перед \"]\"");
+            } else {
+                switch (oper) {
+                case "*":
+                  result = result * this.logicalBlock();
+                  break;
+                case "/":
+                  int startPos = this.lexer.startPos; // Запоминаем позицию для выделения в случае ошибки
+                  int interimResult = this.logicalBlock(); // Промежуточный результат. Проверяем деление на ноль               
+                  if (interimResult != 0) {
+                    result = result / interimResult;
+                  } else {
+                    this.makeException("Деление на ноль запрещено", startPos, this.lexer.endPos);
+                  }
+                  break;
+              }
+            }
+          } else {
+            this.makeException("Ожидалось число");
+          }
+        } else {
           break;
-        }
-        if (this.lexer.currentWord == "*") {
-          this.lexer.nextWord();
-          if (this.isInt(this.lexer.currentWord) || isBrace(this.lexer.currentWord)) {
-            result = result * this.logicalBlock();
-          } else {
-            this.makeException("Ожидалось число");
-          }
-        }else if(this.lexer.currentWord == "/") {
-          this.lexer.nextWord();
-          if (this.isInt(this.lexer.currentWord) || isBrace(this.lexer.currentWord)) {
-            result = result / this.logicalBlock();
-          } else {
-            this.makeException("Ожидалось число");
-          }
         }
       }
       return result;
@@ -208,22 +261,30 @@ namespace translator {
       result = this.logicalNotBlock();
       //this.lexer.nextWord();
       while (true) {
-        if(this.lexer.currentWord != "or" && this.lexer.currentWord != "and") {
+        if (this.isLogicalOperator(this.lexer.currentWord)) {
+          string oper = this.lexer.currentWord;
+          this.lexer.nextWord();
+          if( this.isInt(this.lexer.currentWord)        ||   
+              this.isBrace(this.lexer.currentWord)      || 
+              this.isLogicalNot(this.lexer.currentWord) ||
+              this.inVarsArray(this.lexer.currentWord)) {
+            if (this.lexer.currentWord == "]") {
+              this.makeException("Недопустимо использование знаков операции перед \"]\"");
+            } else {
+              switch (oper) {
+                case "or":
+                  result = this.boolToInt(this.intToBool(result) || this.intToBool(this.logicalNotBlock()));
+                  break;
+                case "and":
+                  result = this.boolToInt(this.intToBool(result) && this.intToBool(this.logicalNotBlock()));
+                  break;
+              }
+            }
+          } else {
+            this.makeException("Ожидалось число");
+          }
+        } else {
           break;
-        }else if(this.lexer.currentWord == "or") {
-          this.lexer.nextWord();
-          if (this.isInt(this.lexer.currentWord) || isBrace(this.lexer.currentWord)) {
-            result = this.boolToInt(this.intToBool(result) || this.intToBool(this.logicalNotBlock()));
-          } else {
-            this.makeException("Ожидалось число");
-          }
-        } else if((this.lexer.currentWord == "and")){
-          this.lexer.nextWord();
-          if (this.isInt(this.lexer.currentWord) || isBrace(this.lexer.currentWord)) {
-            result = this.boolToInt(this.intToBool(result) && this.intToBool(this.logicalNotBlock()));
-          } else {
-            this.makeException("Ожидалось число");
-          }
         }
       }
       return result;
@@ -231,10 +292,14 @@ namespace translator {
     private int logicalNotBlock() {
       int result = 0;
       //this.lexer.nextWord();
-      if(this.lexer.currentWord == "not") {
+      if(this.isLogicalNot(this.lexer.currentWord)) {
         this.lexer.nextWord();
-        bool typeBlockValue = !this.intToBool(this.typeBlock());
-        result = this.boolToInt(typeBlockValue);
+        if (this.lexer.currentWord == "]") {
+          this.makeException("Недопустимо использование знаков операции перед \"]\"");
+        } else {
+          bool typeBlockValue = !this.intToBool(this.typeBlock());
+          result = this.boolToInt(typeBlockValue);
+        }
       } else {
         result = this.typeBlock();
       }
@@ -243,22 +308,30 @@ namespace translator {
     private int typeBlock() {
       int result = 0;
       if (this.inVarsArray(this.lexer.currentWord)) {
-        return this.varsArray[this.lexer.currentWord];
+        result = this.varsArray[this.lexer.currentWord];
+        this.lexer.nextWord();
+        return result;
       } else if(this.isInt(this.lexer.currentWord)){
+        int numberEndPos = this.lexer.endPos;
         result = this.strToInt(this.lexer.currentWord);
         this.lexer.nextWord();
+        if(this.isInt(this.lexer.currentWord) || this.inVarsArray(this.lexer.currentWord)) {
+          this.makeException("Пропущен знак операции.", numberEndPos, this.lexer.startPos);
+        } else if (this.lexer.currentWord != "" && !this.isOperator(this.lexer.currentWord)) {
+          this.makeException("Ожидался знак операции, получено: \"" + this.lexer.currentWord + "\"");
+        }
         return result;
       } else if(this.lexer.currentWord == "[") {
         int braceStartPos = this.lexer.startPos + 1;
-        this.countOfNasting = this.countOfNasting + 1;
-        if(this.countOfNasting < NASTING_OF_BRACES) {
+        this.countOfNesting = this.countOfNesting + 1;
+        if(this.countOfNesting < NESTING_OF_BRACES) {
           this.lexer.nextWord();
           if(this.lexer.currentWord == "]") {
             this.makeException("Ожидалась правая часть", braceStartPos, this.lexer.endPos-1);
           }
           result = this.rightPart();
           if(this.lexer.currentWord == "]") {
-            this.countOfNasting = this.countOfNasting - 1;
+            this.countOfNesting = this.countOfNesting - 1;
           } else {
             this.makeException("Ожидалась скобка");
           }
@@ -271,6 +344,7 @@ namespace translator {
       }
       return 0;
     }
+
     private void makeException(string message, int startPos = 0, int endPos = 0) {
       if(startPos == 0 && endPos == 0) {
         throw new TException(message, this.lexer.startPos, this.lexer.endPos);
@@ -287,6 +361,7 @@ namespace translator {
       string newStr = str.Replace('.', ',');
       return Convert.ToDouble(newStr);
     }
+
     private bool intToBool(int value) {
       return Convert.ToBoolean(value);
     }
@@ -294,12 +369,13 @@ namespace translator {
       return Convert.ToInt32(value);
     }
 
-    private bool isVar(string str) {
-      Regex regex = new Regex("^[a-zA-Zа-яА-Я]{1,}([0-9]*|[a-zA-Zа-яА-Я]*)*$");
-      return regex.IsMatch(str);
-    }
     private bool inVarsArray(string str) {
       return this.varsArray.ContainsKey(str);
+    }
+
+    private bool isVar(string str) {
+      Regex regex = new Regex("^[a-zA-Zа-яА-Я]{1,}([0-9]*|[a-zA-Zа-яА-Я]*)*$");//Терминалы проходят через эту регулярку.
+      return (regex.IsMatch(str) && !this.lexer.isTerminal(this.lexer.currentWord));
     }
     private bool isInt(string str) {
       Regex regex = new Regex("^[0-9]+$");
@@ -312,8 +388,21 @@ namespace translator {
     private bool isAdditiveOperator(string str) {
       return (str == "+" || str == "-");
     }
+    private bool isMultiplicativeOperator(string str) {
+      return (str == "*" || str == "/");
+    }
+    private bool isLogicalOperator(string str) {
+      return (str == "or" || str == "and");
+    }
+    private bool isLogicalNot(string str) {
+      return str == "not";
+    }
     private bool isBrace(string str) {
       return (str == "[" || str == "]");
+    }
+    private bool isOperator(string str) {
+      Regex regex = new Regex("\\,|\\+|\\-|\\*|\\/|\\[|\\]|\\:|and|or");
+      return regex.IsMatch(str);
     }
   }
 }
