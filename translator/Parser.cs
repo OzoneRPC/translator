@@ -156,13 +156,13 @@ namespace translator {
         this.varsArray[currentVar] = this.rightPart();
         this.result = currentVar + " = " + this.varsArray[currentVar];
       } else {
-        this.makeException("Ожидалось \"=\"");
+        this.makeException("Ожидалось \"=\". Получено: \"" + this.lexer.currentWord + "\"");
       }
     }
     private int rightPart() {
       int result = 0;
       if( this.isInt(this.lexer.currentWord)              || 
-          this.inVarsArray(this.lexer.currentWord)        || 
+          this.isVar(this.lexer.currentWord)        || 
           this.isAdditiveOperator(this.lexer.currentWord) ||
           this.isBrace(this.lexer.currentWord)            ||
           this.isLogicalNot(this.lexer.currentWord) ) {
@@ -179,7 +179,7 @@ namespace translator {
           result = this.multiplicativeBlock();
         }else if (this.isLogicalNot(this.lexer.currentWord)) {
           result = this.logicalNotBlock();
-        }else if (this.inVarsArray(this.lexer.currentWord)) {
+        }else if (this.isVar(this.lexer.currentWord)) {
           result = this.multiplicativeBlock();
         } 
         
@@ -194,7 +194,7 @@ namespace translator {
             if( this.isInt(this.lexer.currentWord)        || 
                 this.isBrace(this.lexer.currentWord)      || 
                 this.isLogicalNot(this.lexer.currentWord) || 
-                this.inVarsArray(this.lexer.currentWord)) {
+                this.isVar(this.lexer.currentWord)) {
               if(this.lexer.currentWord == "]") {
                 this.makeException("Недопустимо использование знаков операции перед \"]\"");
               } else {
@@ -230,7 +230,7 @@ namespace translator {
             this.isInt(this.lexer.currentWord)        || 
             this.isBrace(this.lexer.currentWord)      || 
             this.isLogicalNot(this.lexer.currentWord) ||
-            this.inVarsArray(this.lexer.currentWord)) {
+            this.isVar(this.lexer.currentWord)) {
             if (this.lexer.currentWord == "]") {
               this.makeException("Недопустимо использование знаков операции перед \"]\"");
             } else {
@@ -269,7 +269,7 @@ namespace translator {
           if( this.isInt(this.lexer.currentWord)        ||   
               this.isBrace(this.lexer.currentWord)      || 
               this.isLogicalNot(this.lexer.currentWord) ||
-              this.inVarsArray(this.lexer.currentWord)) {
+              this.isVar(this.lexer.currentWord)) {
             if (this.lexer.currentWord == "]") {
               this.makeException("Недопустимо использование знаков операции перед \"]\"");
             } else {
@@ -309,7 +309,8 @@ namespace translator {
     }
     private int typeBlock() {
       int result = 0;
-      if (this.inVarsArray(this.lexer.currentWord)) {
+      if (this.isVar(this.lexer.currentWord)) {
+        if (!this.inVarsArray(this.lexer.currentWord)) { this.makeException("Переменная непроинициализирована"); }
         result = this.varsArray[this.lexer.currentWord];
         this.lexer.nextWord();
         return result;
