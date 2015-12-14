@@ -20,7 +20,6 @@ namespace translator {
     private const int DEFAULT_VAR_VAlUE = 0;
     private const int NESTING_OF_BRACES = 4;
     private int countOfNesting = 0;
-
     public string result = "";
     public Parser(string text) {
       this.lexer = new Lexer(text);
@@ -59,14 +58,13 @@ namespace translator {
             } else {
               this.makeException("Ожидалось целое число. Получено: \"" + this.lexer.currentWord + "\"");
             }
-
           }
           if (this.isInt(this.lexer.currentWord)) {
             this.integerNums.Add(this.strToInt(this.lexer.currentWord));
             this.lexer.nextWord();
             numberCounter = 1;
           }else if(this.lexer.currentWord == "") {
-            this.makeException("Ожидалось целое число, либо \"Первое\", \"Второе\", \"Третье\".");
+            this.makeException("Ожидалось целое число, либо \"Первое\", либо \"Второе\", либо \"Третье\".");
           } else {
             this.makeException("Доступны только целые числа. Получено: \"" + this.lexer.currentWord + "\"");
           }
@@ -183,8 +181,12 @@ namespace translator {
           result = this.logicalNotBlock();
         }else if (this.inVarsArray(this.lexer.currentWord)) {
           result = this.multiplicativeBlock();
+        } 
+        
+        if (this.lexer.currentWord == "]" && this.countOfNesting == 0) {
+          this.makeException("Лишняя закрывающая скобка");
         }
-        //this.lexer.nextWord();
+
         while (true) {
           if (this.isAdditiveOperator(this.lexer.currentWord)) {
             string oper = this.lexer.currentWord;
@@ -213,7 +215,7 @@ namespace translator {
           }
         }
       } else {
-        this.makeException("Ожидалось либо число, либо переменная, либо \"[\", либо \"not\"");
+        this.makeException("Ожидалось либо число, либо переменная, либо \"[\", либо \"not\". Получено: \"" + this.lexer.currentWord + "\"");
       }
       return result;
     }

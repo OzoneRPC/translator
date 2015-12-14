@@ -41,6 +41,9 @@ namespace translator {
             this.processOperator();
           } else if (this.isNumericChar(this.currentSymbol())) {//Текущий символ - число
             this.processNumber();
+          } else {
+            this.endPos = this.currentPos+1;
+            throw new TException("Не удалось распознать \"" + this.currentSymbol()+"\"", this.startPos, this.endPos);
           }
         } else {
           this.endPos = this.currentPos;

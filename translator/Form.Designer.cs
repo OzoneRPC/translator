@@ -36,7 +36,7 @@
       // textbox
       // 
       this.textbox.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-      this.textbox.Location = new System.Drawing.Point(13, 325);
+      this.textbox.Location = new System.Drawing.Point(13, 238);
       this.textbox.Name = "textbox";
       this.textbox.Size = new System.Drawing.Size(354, 241);
       this.textbox.TabIndex = 0;
@@ -45,7 +45,7 @@
       // 
       // button
       // 
-      this.button.Location = new System.Drawing.Point(13, 572);
+      this.button.Location = new System.Drawing.Point(12, 485);
       this.button.Name = "button";
       this.button.Size = new System.Drawing.Size(354, 29);
       this.button.TabIndex = 1;
@@ -57,7 +57,7 @@
       // 
       this.outputLabel.AutoEllipsis = true;
       this.outputLabel.AutoSize = true;
-      this.outputLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+      this.outputLabel.Font = new System.Drawing.Font("MS Reference Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
       this.outputLabel.Location = new System.Drawing.Point(6, 19);
       this.outputLabel.MaximumSize = new System.Drawing.Size(295, 355);
       this.outputLabel.Name = "outputLabel";
@@ -80,7 +80,7 @@
       this.groupBox1.Controls.Add(this.outputLabel);
       this.groupBox1.Location = new System.Drawing.Point(12, 13);
       this.groupBox1.Name = "groupBox1";
-      this.groupBox1.Size = new System.Drawing.Size(355, 295);
+      this.groupBox1.Size = new System.Drawing.Size(355, 219);
       this.groupBox1.TabIndex = 4;
       this.groupBox1.TabStop = false;
       this.groupBox1.Text = "Вывод";
@@ -91,7 +91,7 @@
       this.groupBox2.Controls.Add(this.bnf);
       this.groupBox2.Location = new System.Drawing.Point(380, 13);
       this.groupBox2.Name = "groupBox2";
-      this.groupBox2.Size = new System.Drawing.Size(425, 588);
+      this.groupBox2.Size = new System.Drawing.Size(425, 501);
       this.groupBox2.TabIndex = 5;
       this.groupBox2.TabStop = false;
       this.groupBox2.Text = "БНФ";
@@ -100,7 +100,7 @@
       // 
       this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
       this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-      this.ClientSize = new System.Drawing.Size(817, 613);
+      this.ClientSize = new System.Drawing.Size(817, 526);
       this.Controls.Add(this.groupBox2);
       this.Controls.Add(this.groupBox1);
       this.Controls.Add(this.button);
