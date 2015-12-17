@@ -162,11 +162,11 @@ namespace translator {
     private int rightPart() {
       int result = 0;
       if( this.isInt(this.lexer.currentWord)              || 
-          this.isVar(this.lexer.currentWord)        || 
+          this.isVar(this.lexer.currentWord)              || 
           this.isAdditiveOperator(this.lexer.currentWord) ||
           this.isBrace(this.lexer.currentWord)            ||
           this.isLogicalNot(this.lexer.currentWord) ) {
-   
+        //переделать
         if(this.lexer.currentWord == "-") {
           this.lexer.nextWord();
           result = 0 - this.multiplicativeBlock();
@@ -191,24 +191,18 @@ namespace translator {
           if (this.isAdditiveOperator(this.lexer.currentWord)) {
             string oper = this.lexer.currentWord;
             this.lexer.nextWord();
-            if( this.isInt(this.lexer.currentWord)        || 
-                this.isBrace(this.lexer.currentWord)      || 
-                this.isLogicalNot(this.lexer.currentWord) || 
-                this.isVar(this.lexer.currentWord)) {
-              if(this.lexer.currentWord == "]") {
-                this.makeException("Недопустимо использование знаков операции перед \"]\"");
-              } else {
-                switch (oper) {
-                  case "+":
-                    result = result + this.multiplicativeBlock();
-                    break;
-                  case "-":
-                    result = result - this.multiplicativeBlock();
-                    break;
-                }
-              }  
+
+            if (this.lexer.currentWord == "]") {
+              this.makeException("Недопустимо использование знаков операции перед \"]\"");
             } else {
-              this.makeException("Ожидалось число, либо \"not\", либо переменная");
+              switch (oper) {
+                case "+":
+                  result = result + this.multiplicativeBlock();
+                  break;
+                case "-":
+                  result = result - this.multiplicativeBlock();
+                  break;
+              }
             }
           } else {
             break;
@@ -226,31 +220,24 @@ namespace translator {
         if (this.isMultiplicativeOperator(this.lexer.currentWord)) {
           string oper = this.lexer.currentWord; // Сохраняем оператор
           this.lexer.nextWord();//Смещаемся на следующий токен и проверяем его
-          if( 
-            this.isInt(this.lexer.currentWord)        || 
-            this.isBrace(this.lexer.currentWord)      || 
-            this.isLogicalNot(this.lexer.currentWord) ||
-            this.isVar(this.lexer.currentWord)) {
-            if (this.lexer.currentWord == "]") {
-              this.makeException("Недопустимо использование знаков операции перед \"]\"");
-            } else {
-                switch (oper) {
-                case "*":
-                  result = result * this.logicalBlock();
-                  break;
-                case "/":
-                  int startPos = this.lexer.startPos; // Запоминаем позицию для выделения в случае ошибки
-                  int interimResult = this.logicalBlock(); // Промежуточный результат. Проверяем деление на ноль               
-                  if (interimResult != 0) {
-                    result = result / interimResult;
-                  } else {
-                    this.makeException("Деление на ноль запрещено", startPos, this.lexer.endPos);
-                  }
-                  break;
-              }
-            }
+
+          if (this.lexer.currentWord == "]") {
+            this.makeException("Недопустимо использование знаков операции перед \"]\"");
           } else {
-            this.makeException("Ожидалось число");
+            switch (oper) {
+              case "*":
+                result = result * this.logicalBlock();
+                break;
+              case "/":
+                int startPos = this.lexer.startPos; // Запоминаем позицию для выделения в случае ошибки
+                int interimResult = this.logicalBlock(); // Промежуточный результат. Проверяем деление на ноль               
+                if (interimResult != 0) {
+                  result = result / interimResult;
+                } else {
+                  this.makeException("Деление на ноль запрещено", startPos, this.lexer.endPos);
+                }
+                break;
+            }
           }
         } else {
           break;
@@ -261,29 +248,21 @@ namespace translator {
     private int logicalBlock() {
       int result = 0;
       result = this.logicalNotBlock();
-      //this.lexer.nextWord();
       while (true) {
         if (this.isLogicalOperator(this.lexer.currentWord)) {
           string oper = this.lexer.currentWord;
           this.lexer.nextWord();
-          if( this.isInt(this.lexer.currentWord)        ||   
-              this.isBrace(this.lexer.currentWord)      || 
-              this.isLogicalNot(this.lexer.currentWord) ||
-              this.isVar(this.lexer.currentWord)) {
-            if (this.lexer.currentWord == "]") {
-              this.makeException("Недопустимо использование знаков операции перед \"]\"");
-            } else {
-              switch (oper) {
-                case "or":
-                  result = this.boolToInt(this.intToBool(result) || this.intToBool(this.logicalNotBlock()));
-                  break;
-                case "and":
-                  result = this.boolToInt(this.intToBool(result) && this.intToBool(this.logicalNotBlock()));
-                  break;
-              }
-            }
+          if (this.lexer.currentWord == "]") {
+            this.makeException("Недопустимо использование знаков операции перед \"]\"");
           } else {
-            this.makeException("Ожидалось число");
+            switch (oper) {
+              case "or":
+                result = this.boolToInt(this.intToBool(result) || this.intToBool(this.logicalNotBlock()));
+                break;
+              case "and":
+                result = this.boolToInt(this.intToBool(result) && this.intToBool(this.logicalNotBlock()));
+                break;
+            }
           }
         } else {
           break;
@@ -309,8 +288,7 @@ namespace translator {
     }
     private int typeBlock() {
       int result = 0;
-      if (this.isVar(this.lexer.currentWord)) {
-        if (!this.inVarsArray(this.lexer.currentWord)) { this.makeException("Переменная непроинициализирована"); }
+      if (this.inVarsArray(this.lexer.currentWord)) {
         result = this.varsArray[this.lexer.currentWord];
         this.lexer.nextWord();
         return result;
@@ -344,6 +322,10 @@ namespace translator {
           this.lexer.nextWord();
           this.makeException("Вложеность скобок должна быть не больше 3");
         }
+      }else if (this.isOperator(this.lexer.currentWord)) {
+        this.makeException("Два знака операции");
+      } else {
+        this.makeException("Ожидалось число, либо \"not\", либо переменная. Получено: \"" + this.lexer.currentWord + "\"");
       }
       return 0;
     }
@@ -378,7 +360,7 @@ namespace translator {
 
     private bool isVar(string str) {
       Regex regex = new Regex("^[a-zA-Zа-яА-Я]{1,}([0-9]*|[a-zA-Zа-яА-Я]*)*$");//Терминалы проходят через эту регулярку.
-      return (regex.IsMatch(str) && !this.lexer.isTerminal(this.lexer.currentWord));
+      return (regex.IsMatch(str) && !this.lexer.isTerminal(this.lexer.currentWord) && !this.isLogicalOperator(this.lexer.currentWord) && !this.isLogicalNot(this.lexer.currentWord));
     }
     private bool isInt(string str) {
       Regex regex = new Regex("^[0-9]+$");
@@ -403,8 +385,8 @@ namespace translator {
     private bool isBrace(string str) {
       return (str == "[" || str == "]");
     }
-    private bool isOperator(string str) {
-      Regex regex = new Regex("\\,|\\+|\\-|\\*|\\/|\\[|\\]|\\:|and|or");
+    private bool isOperator(string str) {//Проверяет все возможные операторы
+      Regex regex = new Regex("\\,|\\+|\\-|\\*|\\/|\\[|\\]|\\:|and|or|not");
       return regex.IsMatch(str);
     }
   }

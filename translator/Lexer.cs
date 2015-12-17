@@ -78,8 +78,8 @@ namespace translator {
         }
         this.word += this.currentSymbol();
         if (this.isLogicalOperator(this.word)) {//Может быть неправильно
+          this.currentPos++;// Допустим, получилось слово and, текущая позиция указывает на букву "d", поэтому смещаем указатель, чтобы нормально выделить
           this.endPos = this.currentPos;
-          this.currentPos++;
           break;
         }
         this.currentPos++;
