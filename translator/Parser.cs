@@ -63,7 +63,7 @@ namespace translator {
             this.integerNums.Add(this.strToInt(this.lexer.currentWord));
             this.lexer.nextWord();
             numberCounter = 1;
-          }else if(this.lexer.currentWord == "") {
+          } else if(this.lexer.currentWord == "") {
             this.makeException("Ожидалось целое число, либо \"Первое\", либо \"Второе\", либо \"Третье\".");
           } else {
             this.makeException("Доступны только целые числа. Получено: \"" + this.lexer.currentWord + "\"");
@@ -112,7 +112,7 @@ namespace translator {
               if(this.isVar(this.lexer.currentWord)) {//Переменная ли за запятой?
                 continue;
               } else {
-                makeException("Ожидалось переменная. Получено: \"" + this.lexer.currentWord + "\"");
+                makeException("Ожидалась переменная. Получено: \"" + this.lexer.currentWord + "\"");
               }
 
             } else if(this.isVar(this.lexer.currentWord)) {
@@ -134,21 +134,27 @@ namespace translator {
         if (this.isInt(this.lexer.currentWord)) {
           this.zvenoNums.Add(this.lexer.currentWord);
           this.lexer.nextWord();
-          if (this.lexer.currentWord == ":" && k == 0) {
-            makeException("Ожидалось целое число, получена метка");
-          }else if(this.lexer.currentWord == ":" && k != 0) {
-            break;
+
+
+          if (this.lexer.currentWord == ":") {
+            if(k == 0) {
+              makeException("Ожидалось целое число, получена метка");
+            }else if(k == 1) {
+              this.lexer.nextWord();
+              break;
+            }
           }else if (this.inVarsArray(this.lexer.currentWord)) {
             break;
           }
+
         } else {
           makeException("Ожидалось целое число, либо метка, либо переменная. Получено: \"" + this.lexer.currentWord + "\"");
         }
         k = 1;
       }
-
     }
     private void oper() {
+
       string currentVar = this.lexer.currentWord;
       this.lexer.nextWord();
       if (this.lexer.currentWord == "=") {
@@ -272,7 +278,6 @@ namespace translator {
     }
     private int logicalNotBlock() {
       int result = 0;
-      //this.lexer.nextWord();
       if(this.isLogicalNot(this.lexer.currentWord)) {
         this.lexer.nextWord();
         if (this.lexer.currentWord == "]") {
@@ -289,6 +294,7 @@ namespace translator {
     private int typeBlock() {
       int result = 0;
       if (this.inVarsArray(this.lexer.currentWord)) {
+        this.makeException("Непроинициализированная переменная");
         result = this.varsArray[this.lexer.currentWord];
         this.lexer.nextWord();
         return result;
@@ -296,7 +302,8 @@ namespace translator {
         int numberEndPos = this.lexer.endPos;
         result = this.strToInt(this.lexer.currentWord);
         this.lexer.nextWord();
-        if(this.isInt(this.lexer.currentWord) || this.inVarsArray(this.lexer.currentWord)) {
+        
+        if(this.isInt(this.lexer.currentWord) || this.inVarsArray(this.lexer.currentWord) || this.isLogicalNot(this.lexer.currentWord)) {//Проверка текущего слова
           this.makeException("Пропущен знак операции.", numberEndPos, this.lexer.startPos);
         } else if (this.lexer.currentWord != "" && !this.isOperator(this.lexer.currentWord)) {
           this.makeException("Ожидался знак операции, получено: \"" + this.lexer.currentWord + "\"");

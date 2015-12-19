@@ -5,13 +5,11 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 using System.Collections;
-using System.Windows.Forms;
 
 
 
 namespace translator {
   class Lexer {
-    private string inputText = "";
     private char[] arrayChar;
     private int currentPos = 0;
     private string[] terms = { "Начало", "Первое", "Второе", "Конец", "второго", "Третье", "Сочетаемое" };
@@ -24,7 +22,6 @@ namespace translator {
 
     public Lexer(string text) {
       //Получаем текст и преобразовываем его в символьный массив
-      //this.inputText = text.Trim(' ');
       this.arrayChar = text.ToCharArray();
     }
     public void nextWord() {
